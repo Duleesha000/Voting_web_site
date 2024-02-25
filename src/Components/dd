@@ -1,0 +1,345 @@
+// import Box from '@mui/material/Box';
+// import FormControlLabel from '@mui/material/FormControlLabel';
+// import Radio from '@mui/material/Radio';
+// import { onAuthStateChanged } from 'firebase/auth';
+// import { collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc } from 'firebase/firestore';
+// import React, { useCallback, useEffect, useState } from 'react';
+// import Button from 'react-bootstrap/Button';
+// import { auth, firestore } from '../firebase'; // Import firestore and auth correctly
+// import './Styles.css';
+
+// export default function Home() {
+//   const [selectedCompetitor, setSelectedCompetitor] = useState(null);
+//   const [hasVoted, setHasVoted] = useState(false);
+//   const [competitors, setCompetitors] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   const handleCompetitorChange = useCallback((competitors) => {
+//     setSelectedCompetitor(competitors);
+//   }, []);
+
+
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     const user = auth.currentUser;
+    
+//     if (!user) {
+//       alert('You need to be logged in to vote.');
+//       return;
+//     }
+
+//     if (selectedCompetitor !== null && !hasVoted) {
+//       try {
+//         const docRef = doc(firestore, 'competitors', 'aZ39KXXmv7tCpPpowV5e');
+
+//         const docSnapshot = await getDoc(docRef);
+
+//         if (docSnapshot.exists()) {
+//           const currentCompValue = docSnapshot.data()[`comp${selectedCompetitor}`];
+//           await updateDoc(docRef, {
+//             timestamp: serverTimestamp(),
+//             [`comp${selectedCompetitor}`]: currentCompValue + 1,
+//           });
+
+//           await updateDoc(doc(firestore, 'users', user.uid), {
+//             hasVoted: true,
+//           });
+
+//           localStorage.setItem('hasVoted', 'true');
+//           setHasVoted(true);
+//         }
+
+//         alert('Successfully voted');
+//         setSelectedCompetitor(null);
+
+//       } catch (error) {
+//         console.error('Error voting: ', error);
+//       }
+//     } else {
+//       alert('You have already voted');
+//     }
+//   };
+
+//   useEffect(() => {
+//     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+//       if (user) {
+//         // User is signed in.
+//         console.log('User is signed in:', user);
+
+//         try {
+//           // Check if the user has voted on component mount
+//           const docRef = doc(firestore, 'users', user.uid);
+//           const docSnapshot = await getDoc(docRef);
+
+//           if (docSnapshot.exists()) {
+//             const hasVotedStorage = docSnapshot.data().hasVoted;
+//             console.log(hasVoted);
+
+//             if (hasVotedStorage) {
+//               setHasVoted(true);
+//             } else {
+//               setHasVoted(false);
+//             }
+//           }
+//         } catch (error) {
+//           console.error('Error checking voting status: ', error);
+//         }
+//       } else {
+//         // User is signed out.
+//         console.log('User is signed out');
+//         console.log(hasVoted);
+//         setHasVoted(false);
+//         // You may want to redirect the user to the login page or handle the sign-out scenario.
+//       }
+//     });
+
+//     return () => unsubscribe(); // Cleanup on component unmount
+//   }, []);
+
+//    const fetchCompetitors = async () => {
+//     try {
+
+
+     
+//       const q = query(collection(firestore, 'competitors'));
+//       const querySnapshot = await getDocs(q);
+
+//       const competitorData = [];
+//       querySnapshot.forEach((doc) => {
+//         competitorData.push({ id: doc.id, ...doc.data() });
+//       });
+
+//       setCompetitors(competitorData);
+//       console.log(competitorData);
+//       setLoading(false);
+//     } catch (error) {
+//       console.error('Error fetching competitors:', error.message);
+//       setLoading(false);
+//       console.log(error.message);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchCompetitors();
+//   }, []);
+
+
+
+//   return (
+//     <form onSubmit={handleSubmit}>
+//       <div>
+//         <br /> <br></br>
+        
+//         <Box sx={{ display: 'flex', flexDirection: 'column', ml: 3 }}>
+//           <FormControlLabel
+//             label={`1 competitor`}
+//             control={
+//               <Radio
+//                 checked={selectedCompetitor === 1}
+//                 onChange={() => handleCompetitorChange(1)}
+//               />
+//             }
+//           />
+//           <FormControlLabel
+//             label={`2 competitor `}
+//             control={
+//               <Radio
+//                 checked={selectedCompetitor === 2}
+//                 onChange={() => handleCompetitorChange(2)}
+//               />
+//             }
+//           />
+//         </Box>
+
+//         <Button
+//           variant="primary"
+//           size="lg"
+//           className="custom-button2"
+//           type="submit"
+//           style={{
+//             marginRight: '10px',
+//             background:
+//               'linear-gradient(to right, rgba(101, 126, 234, 0.9), rgba(118, 75, 162, 0.9))',
+//           }}
+//         >
+//           Submit
+//         </Button>
+
+       
+//       </div>
+
+    
+
+//     </form>
+//   );
+// }
+
+
+
+
+// const handleRegister = async (e) => {
+//     e.preventDefault();
+  
+//     try {
+//       // Upload images and get download URLs
+
+//       const adminDocRef = doc(firestore, 'Admins', user.uid);
+//       const adminDocSnapshot = await getDoc(adminDocRef);
+//       const { Competition_cat, Competition_name, imagelogo } = adminDocSnapshot.data();
+
+  
+//       const sponsorImage1URL = sponsorImage1 ? await uploadImage(sponsorImage1) : null;
+//       const sponsorImage2URL = sponsorImage2 ? await uploadImage(sponsorImage2) : null;
+  
+
+//       const emailsFromCsv = await new Promise((resolve) => {
+//         if (csvFile) {
+//           const reader = new FileReader();
+//           reader.onload = (event) => {
+//             const csvContent = event.target.result;
+//             // Process CSV content (parse it to extract email addresses)
+//             // For simplicity, let's assume that each line of the CSV file is an email address
+//             const emails = csvContent.split('\n').map((email) => email.trim());
+//             // Remove empty emails
+//             const filteredEmails = emails.filter((email) => email !== '');
+//             resolve(filteredEmails);
+//           };
+//           reader.readAsText(csvFile);
+//         } else {
+//           resolve([]); // If no CSV file, resolve with an empty array
+//         }
+//       });
+  
+//       // Add your pool data to the firestore document
+//       const poolData = {
+//         title: title,
+//         description: Description,
+//         stdate: stdate instanceof Date ? stdate : new Date(stdate),
+//         enddate: enddate instanceof Date ? enddate : new Date(enddate),
+//         Type: type,
+//         sponsorImage1: sponsorImage1URL,
+//         sponsorImage2: sponsorImage2URL,
+//         emails: emailsFromCsv,
+//         Adminid:user.uid,
+//         Competition_cat:Competition_cat,
+//         Competition_name:Competition_name,
+//         Competition_logo:imagelogo,
+        
+      
+       
+      
+        // Add any other pool-related data as needed
+    //   };
+  
+      // Add the pool data to the 'Pools' collection
+//        await addDoc(collection(firestore, 'Pools'), poolData);
+//       alert('Pool created successfully!');
+//       console.log('Pool created successfully!');
+
+//       Swal.fire({
+//         title: "Good job!",
+//         text:"Pool created successfully!",
+//         icon: "success"
+//       });
+
+
+//     } catch (error) {
+//       console.error('Error creating pool:', error.message);
+
+//       Swal.fire({
+//         title: "Good job!",
+//         text:`Error creating pool: ${error.message}`,
+//         icon: "success"
+//       });
+    
+//     }
+//   };
+
+
+
+
+
+
+
+
+
+
+// const handleSaveChanges = async () => {
+//     try {
+//       // Convert stdate and enddate to Date objects
+//       const stdate = editPool.stdate.toDate();
+//       const enddate = editPool.enddate.toDate();
+  
+//       // Create a new Pool object with updated data
+//       const updatedPool = new Pool(
+
+//         editPool.title,
+//         editPool.description,
+//         stdate,
+//         user.uid,
+//         enddate,
+//         editPool.type,
+//         editPool.sponsorImage1,
+//         editPool.sponsorImage2,
+//         editPool.emails,
+//         editPool.competitionCat,
+//         editPool.competitionName,
+//         editPool.competitionLogo
+//       );
+  
+//       // Upload new images if they exist
+//       if (editPool.sponsorImage1) {
+//         const sponsorImage1URL = await uploadImage(editPool.sponsorImage1);
+//         updatedPool.sponsorImage1 = sponsorImage1URL;
+//       }
+  
+//       if (editPool.sponsorImage2) {
+//         const sponsorImage2URL = await uploadImage(editPool.sponsorImage2);
+//         updatedPool.sponsorImage2 = sponsorImage2URL;
+//       }
+  
+//       // Upload new CSV file if it exists
+//       const emailsFromCsv = await new Promise((resolve) => {
+//         if (editCsvFile) {
+//           const reader = new FileReader();
+//           reader.onload = (event) => {
+//             const csvContent = event.target.result;
+//             // Process CSV content (parse it to extract email addresses)
+//             // For simplicity, let's assume that each line of the CSV file is an email address
+//             const emails = csvContent.split('\n').map((email) => email.trim());
+//             // Remove empty emails
+//             const filteredEmails = emails.filter((email) => email !== '');
+//             resolve(filteredEmails);
+//           };
+//           reader.readAsText(editCsvFile);
+//         } else {
+//           resolve([]); // If no CSV file, resolve with an empty array
+//         }
+//       });
+  
+//       updatedPool.emails = emailsFromCsv;
+  
+//       // Update the pool data using the PoolService
+//       await PoolService.updatePool(updatedPool,editPool.id);
+  
+    
+//       setShowEditModal(false);
+  
+//       Swal.fire({
+//         title: "Good job!",
+//         text: "Pool details updated successfully!",
+//         icon: "success"
+//       });
+      
+//     } catch (error) {
+//       console.error('Error updating pool:', error.message);
+//       Swal.fire({
+//         icon: "error",
+//         title: "Oops...",
+//         text: `Error updating pool: ${error.message}`,
+//       });
+//     }
+//   };
+  
